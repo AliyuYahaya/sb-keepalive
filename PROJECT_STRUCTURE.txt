@@ -1,0 +1,93 @@
+sb-keepalive/                      # Project root
+│
+├── app/                           # Application package
+│   ├── __init__.py                # Package metadata (v2.0.0)
+│   ├── db.py                      # SQLite database operations
+│   ├── models.py                  # Data models (Project, KeepaliveResult)
+│   ├── keepalive.py               # Keepalive execution engine
+│   └── dashboard.py               # Rich terminal dashboard
+│
+├── data/                          # Data directory (auto-created)
+│   └── sb.db                      # SQLite database (gitignored)
+│
+├── cli.py                         # Main CLI entry point (Typer)
+├── migrate.py                     # v1.0 → v2.0 migration script
+├── requirements.txt               # Python dependencies
+│
+├── README.md                      # Complete documentation
+├── EXAMPLES.md                    # Terminal output examples
+├── UPGRADE_SUMMARY.md             # v1→v2 upgrade guide
+├── PROJECT_STRUCTURE.txt          # This file
+│
+├── .gitignore                     # Git ignore rules
+│
+└── legacy/                        # Legacy v1.0 files (optional)
+    ├── README.md                  # Legacy folder documentation
+    ├── keepalive.py               # Old standalone script
+    └── projects.py                # Old config file (migrate then delete)
+
+
+File Sizes (approximate):
+├── app/db.py              → 7.5 KB  (280 lines)
+├── app/models.py          → 2.0 KB  (70 lines)
+├── app/keepalive.py       → 5.5 KB  (200 lines)
+├── app/dashboard.py       → 5.2 KB  (190 lines)
+├── cli.py                 → 6.0 KB  (220 lines)
+├── migrate.py             → 2.2 KB  (80 lines)
+├── requirements.txt       → 60 B    (3 lines)
+├── README.md              → 15 KB   (540 lines)
+├── EXAMPLES.md            → 6.5 KB  (200 lines)
+└── UPGRADE_SUMMARY.md     → 7.0 KB  (280 lines)
+
+Total: ~57 KB of code + documentation
+
+
+Database Schema:
+└── data/sb.db
+    └── projects table
+        ├── id (INTEGER PRIMARY KEY)
+        ├── name (TEXT UNIQUE)
+        ├── url (TEXT)
+        ├── api_key (TEXT)
+        ├── keepalive_method (TEXT)
+        ├── table_name (TEXT)
+        ├── enabled (INTEGER)
+        ├── last_status (TEXT)
+        ├── last_checked (TEXT)
+        ├── created_at (TEXT)
+        └── updated_at (TEXT)
+
+
+CLI Commands:
+├── python cli.py dashboard         # Show all projects
+├── python cli.py dashboard --enabled
+├── python cli.py run               # Run keepalive
+├── python cli.py run --quiet
+├── python cli.py add               # Add project
+├── python cli.py enable <id>
+├── python cli.py disable <id>
+├── python cli.py delete <id>
+├── python cli.py show <id>
+├── python cli.py list
+└── python cli.py version
+
+
+Dependencies (requirements.txt):
+├── supabase==2.27.1                # Supabase Python client
+├── typer==0.15.1                   # CLI framework
+└── rich==13.9.4                    # Terminal UI library
+
+
+Key Features:
+✓ SQLite-backed project management
+✓ Terminal dashboard with Rich
+✓ Interactive & non-interactive modes
+✓ Status tracking & history
+✓ Sequential execution (low memory)
+✓ Multiple keepalive methods
+✓ Migration from v1.0
+✓ Cron-friendly
+✓ Headless SSH-only
+✓ No web UI, no daemons
+✓ Production-safe
+✓ <60MB RAM usage
