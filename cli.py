@@ -78,6 +78,31 @@ def run(
 
 
 @app.command()
+def run_random(
+    verbose: bool = typer.Option(True, "--verbose/--quiet", "-v/-q", help="Verbose output"),
+    db_path: str = typer.Option("data/sb.db", "--db", help="Database path"),
+):
+    """
+    Run keepalive for projects scheduled for today.
+
+    Projects are executed only if their next_run date is today or NULL.
+    After execution, each project gets a random next_run date 1-5 days in the future.
+
+    This command is designed to be run daily via cron at midnight.
+    """
+    setup_logging(verbose)
+
+    with Database(db_path) as db:
+        engine = KeepaliveEngine(db)
+        results = engine.run_scheduled(verbose=verbose)
+
+        # Exit with error code if any failed
+        failed_count = sum(1 for r in results if not r.success)
+        if failed_count > 0:
+            sys.exit(1)
+
+
+@app.command()
 def add(
     name: Optional[str] = typer.Option(None, "--name", "-n", help="Project name"),
     url: Optional[str] = typer.Option(None, "--url", "-u", help="Supabase URL"),

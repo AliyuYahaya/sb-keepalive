@@ -22,6 +22,7 @@ class Project:
     enabled: bool = True
     last_status: Optional[str] = None
     last_checked: Optional[str] = None
+    next_run: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -38,6 +39,7 @@ class Project:
             enabled=bool(data.get("enabled", 1)),
             last_status=data.get("last_status"),
             last_checked=data.get("last_checked"),
+            next_run=data.get("next_run"),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
         )
@@ -54,6 +56,7 @@ class Project:
             "enabled": self.enabled,
             "last_status": self.last_status,
             "last_checked": self.last_checked,
+            "next_run": self.next_run,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

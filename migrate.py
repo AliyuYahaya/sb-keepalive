@@ -23,11 +23,22 @@ def main():
     console.print("\n[bold cyan]Supabase Keepalive Migration[/bold cyan]")
     console.print("Migrating from projects.py to SQLite database\n")
 
-    # Check if projects.py exists
-    if not Path("projects.py").exists():
+    # Check if projects.py exists in root or legacy folder
+    projects_file = None
+    if Path("projects.py").exists():
+        projects_file = "projects.py"
+    elif Path("legacy/projects.py").exists():
+        projects_file = "legacy/projects.py"
+        # Add legacy to path
+        sys.path.insert(0, "legacy")
+
+    if not projects_file:
         console.print("[yellow]No projects.py file found.[/yellow]")
+        console.print("Checked: ./projects.py and ./legacy/projects.py")
         console.print("If you're doing a fresh install, use 'python cli.py add' to add projects.")
         return
+
+    console.print(f"Found configuration: {projects_file}")
 
     # Import projects from old config
     try:

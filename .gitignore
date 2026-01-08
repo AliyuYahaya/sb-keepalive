@@ -10,9 +10,9 @@ ENV/
 .venv
 
 # Security - Never commit credentials
-projects.py
 data/sb.db
 data/*.db
+legacy/projects.py
 
 # Logs
 *.log
@@ -27,3 +27,6 @@ data/*.db
 # OS
 .DS_Store
 Thumbs.db
+
+# Local documentation files
+localfiles/

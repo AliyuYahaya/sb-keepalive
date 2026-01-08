@@ -5,7 +5,8 @@ Executes minimal database queries to keep Supabase free-tier projects active.
 """
 
 import logging
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 from typing import List
 from supabase import create_client, Client
 
@@ -215,6 +216,72 @@ class KeepaliveEngine:
             # Update database with result
             status = "SUCCESS" if result.success else f"FAILED: {result.message}"
             self.db.update_status(project.id, status, result.timestamp)
+
+        if verbose:
+            logger.info("=" * 60)
+            total = len(results)
+            succeeded = sum(1 for r in results if r.success)
+            failed = total - succeeded
+            logger.info(f"Summary: {succeeded}/{total} succeeded, {failed}/{total} failed")
+            logger.info("=" * 60)
+
+        return results
+
+    def run_scheduled(self, verbose: bool = True) -> List[KeepaliveResult]:
+        """
+        Run keepalive for projects scheduled to run today.
+        After each run, assign a random next_run date between 1-5 days from now.
+
+        Args:
+            verbose: If True, log progress to console
+
+        Returns:
+            List of KeepaliveResult objects
+        """
+        if verbose:
+            logger.info("=" * 60)
+            logger.info("Supabase Keepalive - Scheduled Run")
+            logger.info("=" * 60)
+
+        # Get projects scheduled for today or never run
+        projects_data = self.db.get_scheduled_projects()
+
+        if not projects_data:
+            if verbose:
+                logger.info("No projects scheduled for today")
+            return []
+
+        projects = [Project.from_dict(p) for p in projects_data]
+        results = []
+
+        if verbose:
+            logger.info(f"Found {len(projects)} project(s) scheduled for today")
+
+        # Process each scheduled project
+        for project in projects:
+            if verbose:
+                logger.info(f"Processing: {project.name}")
+
+            result = self.ping_project(project)
+            results.append(result)
+
+            # Update database with result
+            status = "SUCCESS" if result.success else f"FAILED: {result.message}"
+            self.db.update_status(project.id, status, result.timestamp)
+
+            # Calculate random next run date (1-5 days from today)
+            days_until_next = random.randint(1, 5)
+            next_run_date = datetime.utcnow().date() + timedelta(days=days_until_next)
+            next_run_str = next_run_date.isoformat()
+
+            # Update next_run in database
+            self.db.update_next_run(project.id, next_run_str)
+
+            if verbose:
+                logger.info(
+                    f"  → Next run scheduled for: {next_run_str} "
+                    f"({days_until_next} days from now)"
+                )
 
         if verbose:
             logger.info("=" * 60)

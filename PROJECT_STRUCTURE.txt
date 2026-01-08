@@ -54,6 +54,7 @@ Database Schema:
         ├── enabled (INTEGER)
         ├── last_status (TEXT)
         ├── last_checked (TEXT)
+        ├── next_run (DATE)           # NEW in v2.1
         ├── created_at (TEXT)
         └── updated_at (TEXT)
 
@@ -61,8 +62,10 @@ Database Schema:
 CLI Commands:
 ├── python cli.py dashboard         # Show all projects
 ├── python cli.py dashboard --enabled
-├── python cli.py run               # Run keepalive
+├── python cli.py run               # Run ALL enabled projects
 ├── python cli.py run --quiet
+├── python cli.py run_random        # Run scheduled projects (NEW in v2.1)
+├── python cli.py run_random --quiet
 ├── python cli.py add               # Add project
 ├── python cli.py enable <id>
 ├── python cli.py disable <id>
@@ -85,6 +88,8 @@ Key Features:
 ✓ Status tracking & history
 ✓ Sequential execution (low memory)
 ✓ Multiple keepalive methods
+✓ Randomized scheduling (1-5 days)      # NEW in v2.1
+✓ Floating schedule per project         # NEW in v2.1
 ✓ Migration from v1.0
 ✓ Cron-friendly
 ✓ Headless SSH-only

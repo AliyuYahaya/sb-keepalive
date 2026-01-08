@@ -48,17 +48,34 @@ class Database:
             enabled INTEGER DEFAULT 1,
             last_status TEXT DEFAULT NULL,
             last_checked TEXT DEFAULT NULL,
+            next_run DATE DEFAULT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE INDEX IF NOT EXISTS idx_enabled ON projects(enabled);
         CREATE INDEX IF NOT EXISTS idx_name ON projects(name);
+        CREATE INDEX IF NOT EXISTS idx_next_run ON projects(next_run);
         """
 
         cursor = self.conn.cursor()
         cursor.executescript(schema)
         self.conn.commit()
+
+        # Add next_run column if it doesn't exist (for existing databases)
+        self._migrate_add_next_run()
+
+    def _migrate_add_next_run(self):
+        """Add next_run column to existing databases if missing."""
+        cursor = self.conn.cursor()
+
+        # Check if next_run column exists
+        cursor.execute("PRAGMA table_info(projects)")
+        columns = [row[1] for row in cursor.fetchall()]
+
+        if "next_run" not in columns:
+            cursor.execute("ALTER TABLE projects ADD COLUMN next_run DATE DEFAULT NULL")
+            self.conn.commit()
 
     def add_project(
         self,
@@ -133,6 +150,28 @@ class Database:
 
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_scheduled_projects(self) -> List[Dict[str, Any]]:
+        """
+        Get all enabled projects that are scheduled to run today or have never run.
+
+        Returns:
+            List of project dicts where next_run is NULL or <= today
+        """
+        cursor = self.conn.cursor()
+        today = datetime.utcnow().date().isoformat()
+
+        cursor.execute(
+            """
+            SELECT * FROM projects
+            WHERE enabled = 1
+            AND (next_run IS NULL OR next_run <= ?)
+            ORDER BY name
+            """,
+            (today,),
+        )
+
+        return [dict(row) for row in cursor.fetchall()]
+
     def update_status(
         self, project_id: int, status: str, timestamp: Optional[str] = None
     ):
@@ -155,6 +194,25 @@ class Database:
             WHERE id = ?
             """,
             (status, timestamp, project_id),
+        )
+        self.conn.commit()
+
+    def update_next_run(self, project_id: int, next_run_date: str):
+        """
+        Update the next_run date for a project.
+
+        Args:
+            project_id: Project ID
+            next_run_date: Next run date in ISO format (YYYY-MM-DD)
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            UPDATE projects
+            SET next_run = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (next_run_date, project_id),
         )
         self.conn.commit()
 

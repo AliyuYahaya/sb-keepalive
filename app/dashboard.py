@@ -57,6 +57,7 @@ class Dashboard:
         table.add_column("Method", width=10)
         table.add_column("Last Status", min_width=15)
         table.add_column("Last Checked", min_width=19)
+        table.add_column("Next Run", min_width=12)
 
         # Add rows
         for project in projects:
@@ -90,6 +91,12 @@ class Dashboard:
             else:
                 method_text = project.keepalive_method
 
+            # Format next_run
+            if project.next_run:
+                next_run_text = self._format_next_run(project.next_run)
+            else:
+                next_run_text = Text("Not set", style="yellow")
+
             table.add_row(
                 str(project.id),
                 project.name,
@@ -97,6 +104,7 @@ class Dashboard:
                 method_text,
                 status_text,
                 checked_text,
+                next_run_text,
             )
 
         # Print table
@@ -157,6 +165,33 @@ class Dashboard:
         except Exception:
             return Text(timestamp_str[:19], style="dim")
 
+    def _format_next_run(self, next_run_str: str) -> Text:
+        """
+        Format next_run date for display.
+
+        Args:
+            next_run_str: ISO format date (YYYY-MM-DD)
+
+        Returns:
+            Formatted text
+        """
+        try:
+            next_run_date = datetime.fromisoformat(next_run_str).date()
+            today = datetime.utcnow().date()
+            delta = (next_run_date - today).days
+
+            if delta < 0:
+                return Text("Today", style="green bold")
+            elif delta == 0:
+                return Text("Today", style="green bold")
+            elif delta == 1:
+                return Text("Tomorrow", style="cyan")
+            else:
+                return Text(f"In {delta} days", style="dim")
+
+        except Exception:
+            return Text(next_run_str, style="dim")
+
     def show_project_details(self, project_id: int):
         """
         Show detailed information for a specific project.
@@ -199,6 +234,9 @@ class Dashboard:
 
         if project.last_checked:
             table.add_row("Last Checked", project.last_checked)
+
+        if project.next_run:
+            table.add_row("Next Run", project.next_run)
 
         if project.created_at:
             table.add_row("Created At", project.created_at)
